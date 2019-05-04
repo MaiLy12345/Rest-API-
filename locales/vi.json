@@ -1,0 +1,12 @@
+{
+  "USERNAME_REQUIRED": "Bắt buộc nhập tài khoản",
+  "PASSWORD_REQUIRED": "Bắt buộc nhập mật khẩu",
+  "USERNAME_ALREADY_EXIST": "Tài khoản đã tồn tại",
+  "USER_NOT_FOUND": "Không tìm thấy người dùng",
+  "USER_ID_IS_NOT_A_NUMBER": "Id tài khoản không phải là số",
+  "OLD_PASSWORD_INCORRECT": "Mật khẩu cũ không đúng",
+  "PASSWORD_NOT_MATCH": "Mật khẩu không trùng khớp",
+  "OLD_PASSWORD_REQUIRED": "Bắt buộc nhập mật khẩu cũ",
+  "NEW_PASSWORD_REQUIRED": "Bắt buộc nhập mật khẩu mới",
+  "CONFIRM_PASSWORD_REQUIRED": "Bắt buộc nhập lại mật khẩu mới"
+}
