@@ -6,36 +6,45 @@ const Response = require('../helpers/response');
 
 const filePath = path.resolve('./', 'database', 'users.json');
 
-exports.getUserList = (req, res, next) => {
+exports.getUserList = async (req, res, next) => {
     try {
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        console.log(req.db);//test middlewarw global
-        if (Array.isArray(fileData) && fileData.length > 0) {
-            return Response.success(res, fileData);
+        let users = await req.db.collection('users').find().toArray();
+        if (!users) {
+            return next(new Error('No data'));
         }
-
-        return Response.success(res);
+        return res.status(200).json({
+            message: 'List',
+            data: users
+        });
     } catch (e) {
-        return next(e);
+        console.error(e);
+        return res.status(400).json({
+            message: 'Error! An error occurred.',
+            Error: e
+        });
     }
 };
 
-exports.getUserById = (req, res, next) => {
+exports.getUserById = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         const userId = parseInt(id);
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const index = fileData.findIndex((user) => {
-            return parseInt(user.id) === userId
+        const user = await req.db.collection('users').findOne({
+            _id: ObjectId(userId)
         });
-
-        if (index < 0) {
-            return next(new Error('USER_NOT_FOUND'))
+        if (!user) {
+            return next(new Error('User not found'));
         }
-
-        return Response.success(res, fileData[index]);
+        return res.status(200).json({
+            message: 'Data User',
+            data: user
+        });
     } catch (e) {
-        return next(e);
+        console.error(e);
+        return res.status(400).json({
+            message: 'Error! An error occurred. Please try again later',
+            Error: e
+        });
     }
 };
 
@@ -47,58 +56,44 @@ exports.createUser = (req, res, next) => {
         collection.insert({
             username,
             password
-        }, function(err, result) {
+        }, function (err, result) {
             if (err) {
                 return next(err);
             }
             return Response.success(res, result);
-            
+
         });
-    
-        // let userId = 1;
-        // const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        // const index = fileData.findIndex((user) => {
-        //     return user.username === username
-        // });
 
-        // if (index >= 0) {
-        //     return next(new Error('USERNAME_ALREADY_EXIST'))
-        // }
-
-        // userId = fileData[fileData.length - 1].id + 1;
-
-        // fileData.push({
-        //     id: userId,
-        //     username,
-        //     password
-        // });
-
-        // fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2), 'utf8');
-
-        // return Response.success(res, { id: userId });
     } catch (e) {
         return next(e);
     }
 };
 
-exports.deleteUser = (req, res, next) => {
+exports.deleteUser = async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = parseInt(id);
         const db = req.db;
         const collection = db.collection('users');
-        // const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        collection.findOne({
+            _id: ObjectId(userId)
+        }, (err, data) => {
+            if (err) {
+                return next(err);
+            }
 
-        // const index = fileData.findIndex((user) => {
-        //     return parseInt(user.id) === userId
-        // });
-
-        // if (index < 0) {
-        //     return next(new Error('USER_NOT_FOUND'));
-        // }
-
-        // fileData.splice(index, 1);
-        // fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2), 'utf8');
+            collection.remove({
+                _id: ObjectId(userId)
+            }, (err, result) => {
+                if (err) {
+                    return next(new Error('can not delete'));
+                }
+                return res.status(200).json({
+                    message: 'delete user successful',
+                    data: result
+                });
+            });
+        });
 
         return Response.success(res);
     } catch (e) {
