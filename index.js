@@ -4,40 +4,63 @@ const bodyParser = require('body-parser');
 const userController = require('./controllers/user');
 const userMiddleware = require('./middlewares/user');
 const Response = require('./helpers/response');
-
 const PORT = 3000;
 const app = express();
-
+const MongoClient = require('mongodb').MongoClient;
+const assert = require('assert');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ type: 'application/json' }));
 
-app.get(
-    '/api/v1/users',
-    userController.getUserList
-);
+// Connection URL
+const url = 'mongodb://localhost:27017';
 
-app.get(
-    '/api/v1/users/:id',
-    userMiddleware.validateGetUserById,
-    userController.getUserById
-);
+// Database Name
+const dbName = 'myproject';
 
-app.post(
-    '/api/v1/users',
-    userMiddleware.validateCreateUser,
-    userController.createUser
-);
+// Use connect method to connect to the server
+MongoClient.connect(url, function (err, client) {
+    if (err) {
+        console.log(err);
+        process.exit();
+    }
+    console.log("Connected successfully to server");
+    const db = client.db(dbName);
+    app.use((req, res, next) => {
+        req.db = db;
+        next();
+      
+    });
 
-app.delete(
-    '/api/v1/users/:id',
-    userMiddleware.validateDeleteUser,
-    userController.deleteUser
-);
+    app.get(
+        '/api/v1/users',
+        userController.getUserList
+    );
 
-app.use((err, req, res, next) => {
-    return Response.error(res, err)
+    app.get(
+        '/api/v1/users/:id',
+        userMiddleware.validateGetUserById,
+        userController.getUserById
+    );
+
+    app.post(
+        '/api/v1/users',
+        userMiddleware.validateCreateUser,
+        userController.createUser
+    );
+
+    app.delete(
+        '/api/v1/users/:id',
+        userMiddleware.validateDeleteUser,
+        userController.deleteUser
+    );
+
+    app.use((err, req, res, next) => {
+        return Response.error(res, err)
+    });
 });
 
+
+
 app.listen(PORT, () => {
-   console.log(`App listening PORT: ${PORT}`);
+    console.log(`App listening PORT: ${PORT}`);
 });
