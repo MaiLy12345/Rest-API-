@@ -1,5 +1,5 @@
 'use strict';
-
+const ObjectId = require('mongodb').ObjectID
 const fs = require('fs');
 const path = require('path');
 const Response = require('../helpers/response');
@@ -27,11 +27,11 @@ exports.getUserList = async (req, res, next) => {
 
 exports.getUserById = async (req, res, next) => {
     try {
-        const id = req.params.id;
-        const userId = parseInt(id);
-        const user = await req.db.collection('users').findOne({
-            _id: ObjectId(userId)
-        });
+        const _id = req.params.id;
+        const db = req.db; 
+        const collection = db.collection('users');
+        console.log(collection)
+        const user = await collection.findOne({_id: ObjectId(_id)});
         if (!user) {
             return next(new Error('User not found'));
         }
@@ -71,31 +71,24 @@ exports.createUser = (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const userId = parseInt(id);
-        const db = req.db;
+        const _id = req.params.id;
+        const db = req.db; 
         const collection = db.collection('users');
-        collection.findOne({
-            _id: ObjectId(userId)
-        }, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-
-            collection.remove({
-                _id: ObjectId(userId)
-            }, (err, result) => {
-                if (err) {
-                    return next(new Error('can not delete'));
-                }
-                return res.status(200).json({
-                    message: 'delete user successful',
-                    data: result
-                });
-            });
+        console.log(collection)
+        const user = await collection.findOne({_id: ObjectId(_id)});
+        if (!user) {
+            return next(new Error('user not found !'));
+        }
+        const deleted = await collection.deleteOne({_id: ObjectId(_id)});
+        if (deleted.n === 0) {
+            return next(new Error('Can not delete !'));
+        }
+//tra ve 1 object
+        return res.status(200).json({
+            message: 'delete user successful',
+            data: user
         });
-
-        return Response.success(res);
+// 1 la xoa ok, con 0 la kjhong xoa dc
     } catch (e) {
         return next(e);
     }
